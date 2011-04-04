@@ -1,0 +1,140 @@
+@charset "UTF-8";
+
+/**
+ * Stylesheet resetting
+ *
+ * @section	reset
+ */
+@import url("./reset.css");
+
+body
+{
+    font-size: 90%;
+    font-family: 'Osaka', sans-serif;
+    line-height: 150%;
+    width: 320px;
+    overflow: hidden;
+    word-wrap: break-word;
+}
+
+header
+{
+    background:
+        -webkit-gradient(
+            linear,
+            0% 0%,
+            0% 100%,
+            from(#ddd),
+            to(#eee),
+            color-stop(.8,#fff)
+        );
+    border-bottom: 1px solid #ddd;
+    padding: 5px;
+}
+
+header p
+{
+    text-align: right;;
+}
+
+header form input[type="text"]
+{
+    color: #aaa;
+	border: 2px solid #ccc;
+    font-size: 1em;
+    padding: 2px 5px;
+    border-radius: 10px;
+}
+
+article
+{
+    max-height: 460px;
+    overflow: auto;
+    padding-bottom: 10px;
+}
+
+article section#talks dl
+{
+    margin-top: 16px;
+}
+
+article section#talks dl dt
+{
+    margin-left: 15px;
+}
+
+article section#talks dl dt img
+{
+    border-radius: 4px;
+}
+
+article section#talks dl dt span.date
+{
+    color: #888;
+    font-size: 80%;
+    position: relative;
+    left: 80px;
+}
+
+article section#talks dl dd
+{
+    box-shadow: 4px 4px 16px #ddd;
+    position: relative;
+	border: 2px solid #ccc;
+    padding: 5px;
+    margin: 0 10px 0 5px;
+    border-radius: 10px;
+    z-index: 1;
+}
+
+article section#talks dl dd:before
+{
+    border-top-width: 0;
+    border-right-width: 8px;
+    border-bottom-width: 16px;
+    border-left-width: 8px;
+    border-color: #ccc transparent;
+    border-style: solid;
+    display: block;
+    position: absolute;
+    top: -16px;
+    left: 24px;
+    width: 0;
+    height: 0;
+    content: "";
+}
+
+article section#talks dl dd:after
+{
+    border-top-width: 0;
+    border-right-width: 8px;
+    border-bottom-width: 16px;
+    border-left-width: 8px;
+    border-color: #fff transparent;
+    border-style: solid;
+    display: block;
+    position: absolute;
+    top: -10px;
+    left: 24px;
+    width: 0;
+    height: 0;
+    content: "";
+}
+
+article section#talks dl dd strong
+{
+    background-color: #ff0;
+    font-weight: bold;
+}
+
+article section#search
+{}
+
+article section#loader
+{
+    margin: 1em 0;
+    text-align: center;
+}
+
+footer
+{}

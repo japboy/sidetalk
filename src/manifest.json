@@ -1,0 +1,28 @@
+{
+    "name": "Sidetalk",
+    "version": "0.0.9",
+
+    "description": "Take a look what people are talking about the webpage.",
+    "icons":
+    {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    },
+
+    "browser_action":
+    {
+        "default_title": "Sidetalk",
+        "default_popup": "popup.html",
+        "default_icon": "icon19.png"
+    },
+
+    "background_page": "background.html",
+    "homepage_url": "https://github.com/japboy/sidetalk",
+    "minimum_chrome_version": "10",
+    "permissions":
+    [
+        "tabs",
+        "http://otter.topsy.com/"
+    ]
+}
