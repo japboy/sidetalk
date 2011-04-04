@@ -1,25 +1,30 @@
 #!/bin/bash
 
 WORK_PATH=`pwd`
+SOURCE_PATH="${WORK_PATH}/src" # No slash end
+DOCUMENT_PATH="${WORK_PATH}/doc/"
 PACKAGE_PATH="${WORK_PATH}/pkg/" 
-SOURCE_PATH="${WORK_PATH}/src/"
 EXCLUDED_FILES='icon.svg obsoleted.js'
 
-if [ $# -ne 1 ]
+if [ $# -ne 2 ]
 then
     cat <<__USAGE__
 Packaging help script for Sidetalk - Google Chrome extension
 
 Usage:
-bash $0 /path/to/yuicompressor-x.y.z.jar
+    bash $0 [path to YUI Compressor] [path to JsDoc Toolkit]
+
+    YUICompressor: /path/to/yuicompressor-x.y.z.jar
+    JsDoc Toolkit: /path/to/jsdoc-toolkit-x.y.z/jsrun.jar
 
 Description:
-This script automatically compress and optimise JavaScript & CSS files.
-After running this script with correct argument, "pkg" directory will be
-cleared and replaced with new files.
+    This script automatically compress and optimise JavaScript & CSS files.
+    After running this script with correct argument, "pkg" directory will be
+    cleared and replaced with new files.
 
-Dependency:
-* YUI Compressor
+Dependencies:
+    * JsDoc Toolkit http://code.google.com/p/jsdoc-toolkit/
+    * YUI Compressor http://developer.yahoo.com/yui/compressor/
 
 __USAGE__
     exit
@@ -28,6 +33,24 @@ fi
 if ! test -f ${1}
 then
     echo "Argument is incorrect: $1"
+    exit
+fi
+
+if ! test -f ${2}
+then
+    echo "Argument is incorrect: $2"
+    exit
+fi
+
+if ! test -d ${SOURCE_PATH}
+then
+    echo "Source directory is invalid: ${SOURCE_PATH}"
+    exit
+fi
+
+if ! test -d ${DOCUMENT_PATH}
+then
+    echo "Document directory is invalid: ${DOCUMENT_PATH}"
     exit
 fi
 
@@ -52,6 +75,16 @@ do
 done
 # Add extra file into FILE_PATH_LIST
 FILE_PATH_LIST=("${FILE_PATH_LIST[@]}" "${WORK_PATH}/LICENCE")
+
+# Generate JsDoc
+java -jar ${2} ${2%/*}/app/run.js \
+               --template=${2%/*}/templates/jsdoc/ \
+               --allfunctionsa \
+               --encoding=utf8 \
+               --test \
+               --directory=${DOCUMENT_PATH} \
+               ${SOURCE_PATH}         
+echo "Documents created"
 
 # Start main proccess
 for (( I = 0; I < ${#FILE_PATH_LIST[@]}; ++I ))
