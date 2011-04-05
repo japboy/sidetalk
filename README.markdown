@@ -1,4 +1,5 @@
-SIDETALK ![](http://stillmaintained.com/japboy/sidetalk.png)
+SIDETALK
+![Project status](http://stillmaintained.com/japboy/sidetalk.png)
 ========
 
 Sidetalk is a Google Chrome extension that shows Twitter tweets about the
@@ -20,9 +21,9 @@ JsDoc Toolkit.
 CONTACT
 -------
 
-Twitter @japboy
-GitHub: http://github.com/japboy/sidetalk
-Chrome Web Store: http://j.mp/dMy8zm
+* Twitter [@japboy](http://twitter.com/japboy)
+* GitHub: (http://github.com/japboy/sidetalk)
+* Chrome Web Store: (http://j.mp/dMy8zm)
 
 TODO
 ----
