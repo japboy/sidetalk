@@ -8,25 +8,24 @@ EXCLUDED_FILES='icon.svg obsoleted.js'
 
 if [ $# -ne 2 ]
 then
-    cat <<__USAGE__
-Packaging help script for Sidetalk - Google Chrome extension
-
-Usage:
-    bash $0 [path to YUI Compressor] [path to JsDoc Toolkit]
-
-    YUICompressor: /path/to/yuicompressor-x.y.z.jar
-    JsDoc Toolkit: /path/to/jsdoc-toolkit-x.y.z/jsrun.jar
-
-Description:
-    This script automatically compress and optimise JavaScript & CSS files.
-    After running this script with correct argument, "pkg" directory will be
-    cleared and replaced with new files.
-
-Dependencies:
-    * JsDoc Toolkit http://code.google.com/p/jsdoc-toolkit/
-    * YUI Compressor http://developer.yahoo.com/yui/compressor/
-
-__USAGE__
+    echo 'Packaging help script for Sidetalk - Google Chrome extension'
+    echo
+    echo -e "\033[1mUsage\033[0m:"
+    echo "  bash $0 [path to YUI Compressor] [path to JsDoc Toolkit]"
+    echo
+    echo '  YUICompressor: /path/to/yuicompressor-x.y.z.jar'
+    echo '  JsDoc Toolkit: /path/to/jsdoc-toolkit-x.y.z/jsrun.jar'
+    echo
+    echo -e "\033[1mDescription\033[0m:"
+    echo '  This script automatically generates JsDoc for JavaScript files and,'
+    echo '  compresses and optimises JavaScript & CSS files.'
+    echo '  After running this script with correct parameters, Package'
+    echo '  directory ` pkg` will be cleared and replaced with new files.'
+    echo
+    echo -e "\033[1mDependencies\033[0m:"
+    echo '  * JsDoc Toolkit http://code.google.com/p/jsdoc-toolkit/'
+    echo '  * YUI Compressor http://developer.yahoo.com/yui/compressor/'
+    echo
     exit
 fi
 
