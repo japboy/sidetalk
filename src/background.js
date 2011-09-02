@@ -1,70 +1,64 @@
+'use strict';
+
 /**
- * Sidetalk
+ * Sidetalk - A Google Chrome extension that shows what people are talking
+ * about the webpage you are looking at.
  *
- * A Google Chrome extension that shows what people are talking about the
- * webpage you are looking at.
- *
- * @overview A JavaScript file contains Chrome extension Background script.
- * @author Yu Inao <lagfer(at)youck(dot)org>
- * @version 0.0.9
+ * @author Yu I. <Twitter @japboy>
+ * @version 0.1.0
  */
+
 
 /**
  * Set the badge text & color, then show it.
  * @param {String} tabId Unique ID for the current opening tab.
- * @param {String} text The content text for the badge.
+ * @param {Number} count The content text for the badge.
  * @param {Array} color RGBA color definition. ex) `[255, 0, 0, 255]`.
  */
-function setBadge(tabId, text, color)
-{
-    if (text > 999)
-    {
-        text = text.toString().replace(/...$/, 'k');
+Sidetalk.setBadge = function(tabId, count, color) {
+    if (count > 9999) {
+        count = count.toString().replace(/....$/, 'm');
     }
-    else if (text == 0)
-    {
-        text = '';
+    else if (count > 999) {
+        count = count.toString().replace(/...$/, 'k');
     }
-    else
-    {
-        text = text.toString();
+    else if (count === 0) {
+        count = '0';
     }
-    chrome.browserAction.setBadgeText(
-        {'text': text, 'tabId': tabId}
-    );
-    chrome.browserAction.setBadgeBackgroundColor(
-        {'color': color, 'tabId': tabId}
-    );
-}
+    else {
+        count = count.toString();
+    }
 
-chrome.tabs.onUpdated.addListener(
-    function(tabId, changeInfo, tab)
-    {
-        var resp;
-        var xhr = new XMLHttpRequest();
+    chrome.browserAction.setBadgeText({
+        'text': count, 'tabId': tabId
+    });
+    chrome.browserAction.setBadgeBackgroundColor({
+        'color': color, 'tabId': tabId
+    });
+};
 
-        if (tab.url.match(/^https?:\/\/.*/) == null)
-        {
-            return;
-        }
-        xhr.onreadystatechange = function()
-        {
-            if (xhr.readyState == 4)
-            {
-                resp = JSON.parse(xhr.responseText);
-                setBadge(
-                    tabId,
-                    resp.response.trackback_total,
-                    [255, 0, 0, 255]
-                );
-            }
-        }
-        xhr.open(
-            'GET',
-            'http://otter.topsy.com/urlinfo.json?url=' +
-                encodeURIComponent(tab.url),
-            true
-        );
-        xhr.send();
+/**
+ * Add an event handler when a tab is updated
+ * @see http://code.google.com/chrome/extensions/tabs.html#event-onUpdated
+ * @param {Function}
+ */
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+    /**
+     * Fetch tweet count from Otter API and pass the number
+     * @param {Number} tabId
+     * @param {Object} changeInfo
+     * @param {Tab} tab
+     */
+    if (Sidetalk.isValidURI(tab.url) === false) {
+        return;
     }
-);
+
+    var url = Sidetalk.getEncodedURI(Sidetalk.OTTER_URLINFO_URL,
+                                     {'url': tab.url});
+
+    Sidetalk.HTTP.get(url, function(xhr) {
+        var response = JSON.parse(xhr.responseText).response;
+
+        Sidetalk.setBadge(tabId, response.trackback_total, [255, 0, 0, 255]);
+    });
+});

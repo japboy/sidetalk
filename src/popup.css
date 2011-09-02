@@ -1,24 +1,65 @@
 @charset "UTF-8";
 
 /**
- * Stylesheet resetting
+ * Sidetalk - Google Chrome extension
  *
- * @section	reset
+ * @project   com.github.japboy.sidetalk
+ * @version   0.1.1
+ * @author    Yu Inao
+ * @copyright 2011 by Yu Inao
+ * @cssdoc    version 1.0-pre
+ * @license   Public domain
+ */
+
+/**
+ * Stylesheet initialisation
+ * @section reset
  */
 @import url("./reset.css");
 
-body
-{
-    font-size: 90%;
-    font-family: 'Osaka', sans-serif;
-    line-height: 150%;
-    width: 320px;
-    overflow: hidden;
-    word-wrap: break-word;
+/**
+ * Grouping content
+ * @section structure
+ * @see     http://www.w3.org/TR/html5/semantics.html#grouping-content
+ */
+p,
+hr,
+br,
+pre,
+dialog,
+blockquote,
+ol,
+ul,
+li,
+dl,
+dt,
+dd {}
+
+/**
+ * Text-level semantics
+ * @section structure
+ * @see     http://www.w3.org/TR/html5/text-level-semantics.html#text-level-semantics
+ */
+a {
+    text-decoration: none;
 }
 
-header
-{
+
+/**
+ * Page design
+ * @section design
+ */
+body {
+    width: 320px;
+    line-height: 150%;
+    overflow: hidden;
+    font-family: 'Osaka', sans-serif;
+    font-size: 90%;
+}
+
+body header {
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
     background:
         -webkit-gradient(
             linear,
@@ -28,67 +69,73 @@ header
             to(#eee),
             color-stop(.8,#fff)
         );
-    border-bottom: 1px solid #ddd;
-    padding: 5px;
 }
 
-header p
-{
-    text-align: right;;
+body header form p {
+    text-align: right;
 }
 
-header form input[type="text"]
-{
-    color: #aaa;
-	border: 2px solid #ccc;
-    font-size: 1em;
+body header form p a img {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+}
+
+body header form p input[type="text"] {
     padding: 2px 5px;
+    border: 2px solid #ccc;
     border-radius: 10px;
+    color: #aaa;
+    font-size: 1em;
 }
 
-article
-{
+body article {
+    padding-bottom: 10px;
     max-height: 460px;
     overflow: auto;
-    padding-bottom: 10px;
 }
 
-article section#talks dl
-{
+body article section#talks p {
+    margin: 1em;
+    text-align: center;
+}
+
+body article section#talks dl {
     margin-top: 16px;
 }
 
-article section#talks dl dt
-{
+body article section#talks dl dt {
     margin-left: 15px;
 }
 
-article section#talks dl dt img
-{
+body article section#talks dl dt img {
     border-radius: 4px;
 }
 
-article section#talks dl dt span.date
-{
+body article section#talks dl dt span.date {
+    margin-right: 15px;
+    margin-bottom: -1.6em;
+    display: block;
+    position: relative;
+    text-align: right;
+    bottom: 1.6em;
     color: #888;
     font-size: 80%;
-    position: relative;
-    left: 80px;
 }
 
-article section#talks dl dd
-{
-    box-shadow: 4px 4px 16px #ddd;
-    position: relative;
-	border: 2px solid #ccc;
-    padding: 5px;
+body article section#talks dl dd {
     margin: 0 10px 0 5px;
+    padding: 5px;
+    border: 2px solid #ccc;
     border-radius: 10px;
+    position: relative;
     z-index: 1;
+    text-align: justify;
+    box-shadow: 4px 4px 16px #ddd;
+    word-break: break-all;
 }
 
-article section#talks dl dd:before
-{
+body article section#talks dl dd:before {
     border-top-width: 0;
     border-right-width: 8px;
     border-bottom-width: 16px;
@@ -104,8 +151,7 @@ article section#talks dl dd:before
     content: "";
 }
 
-article section#talks dl dd:after
-{
+body article section#talks dl dd:after {
     border-top-width: 0;
     border-right-width: 8px;
     border-bottom-width: 16px;
@@ -121,20 +167,16 @@ article section#talks dl dd:after
     content: "";
 }
 
-article section#talks dl dd strong
-{
+body article section#talks dl dd strong {
     background-color: #ff0;
     font-weight: bold;
 }
 
-article section#search
-{}
+body article section#search {}
 
-article section#loader
-{
+body article section#loader {
     margin: 1em 0;
     text-align: center;
 }
 
-footer
-{}
+body footer {}

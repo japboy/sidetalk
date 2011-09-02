@@ -1,541 +1,358 @@
+'use strict';
+
 /**
- * Sidetalk
+ * Sidetalk - A Google Chrome extension that shows what people are talking
+ * about the webpage you are looking at.
  *
- * A Google Chrome extension that shows what people are talking about the
- * webpage you are looking at.
- *
- * @overview A JavaScript file contains Chrome extension Background script.
- * @author Yu Inao <lagfer(at)youck(dot)org>
- * @version 0.0.9
+ * @author Yu I. <Twitter @japboy>
+ * @version 0.1.0
  */
 
-var cachedTab = new Object();
+(function() {
+    /**
+     * A cache object to store JSON object from the API response
+     */
+    var cache = {},
+        re_cache = new RegExp(),
+        re_string = '',
 
-/**
- * A cache object to store JSON object from the API response
- */
-var cache =
-{
-    topsy_trackback_url: '',
-    total: 0,
-    list: new Array(),
-};
+    /**
+     * FIXME: Hightlight implementation
+     * Search and filter contents incrementally
+     * @param {String} className Class name for target DOM elements.
+     * @param {String} keyword A keyword for incremental search.
+     */
+    filterItems = function(className, keyword) {
+        var listItems = document.getElementsByClassName(className),
+            re_currentKeyword = new RegExp(
+                '(' + getQuotedMetachars(keyword) + ')',
+                'gi'
+            ),
+            currentKeyword = getQuotedMetachars(keyword),
+            re_previousKeyword = re_cache,
+            previousKeyword = re_string;
 
-/**
- * A record of how many times XHR request is sent
- */
-var request = 0;
+        filterItem = function(currentListItem) {
+            if (currentListItem.innerHTML.match(re_currentKeyword)) {
+                currentListItem.style.display = 'block';
+                /*
+                currentListItem.getElementsByTagName('dd')[0].innerHTML =
+                    currentListItem.getElementsByTagName('dd')[0].innerHTML.replace(re_currentKeyword, '<strong>' + '$1' + '</strong>');
+                */
+            }
+            else {
+                currentListItem.style.display = 'none';
+            }
+        };
 
-var re_cache = new RegExp();
-var re_string = '';
-
-/**
- * Get local date & time from Unix timestamp
- * @param {Number} timestamp 10 digits of Unix timestamp
- * @return {String} Formatted date & time like `23:01, Sun, 01-Jan-2011`.
- */
-function getDateString(timestamp)    
-{
-    var date = new Date(timestamp * 1000);
-    var day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    var month = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    var dateString = 
-        date.getHours() + ':' + date.getMinutes() + ', ' +
-        day[date.getDay()] + ', ' +
-        date.getDate() +
-        '-' + month[date.getMonth()] + 
-        '-' + date.getFullYear();
-    return dateString;
-}
-
-/**
- * Escape regular expression syntax characters
- * @see http://0xcc.net/blog/archives/000019.html
- * @param {String} pattern A pattern for regular expression.
- * @return {String} An escaped pattern.
- */
-function quoteMetachars(pattern)
-{
-    return pattern.replace(/(\W)/, '\\$1');
-}
-
-/**
- * Search and filter contents incrementally
- * @see http://0xcc.net/blog/archives/000019.html
- * @param {String} className Class name for target DOM elements.
- * @param {String} keyword A keyword for incremental search.
- */
-function filterItems(className, keyword)
-{
-    var listItems = document.getElementsByClassName(className);
-    var re_currentKeyword = new RegExp(
-        '(' + quoteMetachars(keyword) + ')',
-        'gi'
-    );
-    var currentKeyword = quoteMetachars(keyword);
-    var re_previousKeyword = re_cache;
-    var previousKeyword = re_string;
-
-    var filterItem = function(currentListItem)
-    {
-        if (currentListItem.innerHTML.match(re_currentKeyword))
-        {
-            currentListItem.style.display = 'block';
+        for (var i = 0; i < listItems.length; i++) {
             /*
-            currentListItem.getElementsByTagName('dd')[0].innerHTML =
-                currentListItem.getElementsByTagName('dd')[0].innerHTML.replace(
-                    re_currentKeyword,
-                    '<strong>' + '$1' + '</strong>'
-                );
-            */
-        }
-        else
-        {
-            currentListItem.style.display = 'none';
-        }
-    }
-
-    for (var i = 0; i < listItems.length; i++)
-    {
-        /*
-        if (re_previousKeyword.source == '' && previousKeyword == '')
-        {
-            filterItem(listItems[i]);
-        }
-        else
-        {
-            if (listItems[i].innerText.match(re_previousKeyword))
-            {
-                listItems[i].style.display = 'block';
-                listItems[i].getElementsByTagName('dd')[0].innerHTML =
-                    listItems[i].getElementsByTagName('dd')[0].innerHTML.replace(
-                        re_previousKeyword,
-                        previousKeyword
-                    );
+            if (re_previousKeyword.source === '' && previousKeyword === '') {
                 filterItem(listItems[i]);
             }
-            else
-            {
-                listItems[i].style.display = 'none';
-                listItems[i].getElementsByTagName('dd')[0].iinnerHTML =
-                    cache.list[i].content;
+            else {
+                if (listItems[i].innerText.match(re_previousKeyword)) {
+                    listItems[i].style.display = 'block';
+                    listItems[i].getElementsByTagName('dd')[0].innerHTML =
+                        listItems[i].getElementsByTagName('dd')[0].innerHTML.replace(re_previousKeyword, previousKeyword);
+                    filterItem(listItems[i]);
+                }
+                else {
+                    listItems[i].style.display = 'none';
+                    listItems[i].getElementsByTagName('dd')[0].iinnerHTML =
+                        cache.list[i].content;
+                }
             }
+            */
+
+            filterItem(listItems[i]);
         }
-        */
-        filterItem(listItems[i]);
-    }
-    re_cache = new RegExp('<strong>(' + currentKeyword + ')<\/strong>', 'gi');
-    re_string = currentKeyword;
-}
 
-/**
- * Remove a generated HTML element by its ID attribute
- * @see https://github.com/shapeshed/twitter_reactions
- * @param {String} id The ID attribute of an element to be removed.
- */
-function removeElementById(id)
-{
-    var node;
+        re_cache = new RegExp('<strong>(' + currentKeyword + ')<\/strong>', 'gi');
+        re_string = currentKeyword;
+    },
 
-    if (document.getElementById(id) == null)
-    {
-        return;
-    }
-    node = document.getElementById(id);
-    node.parentNode.removeChild(node);
-}
+    /**
+     * Remove a HTML element by its ID attribute
+     * @param {String} id The ID attribute of an element to be removed.
+     */
+    removeElementById =  function(id) {
+        var node = document.getElementById(id);
 
-function removeElementsByClassName(className)
-{
-    var nodes;
+        if (node === null) {
+            return;
+        }
 
-    if (document.getElementsByClassName(className).length == 0)
-    {
-        console.warn(
-            'The specified element is not existed. ' +
-            '1st argument has to be fixed.'
-        );
-        return;
-    }
-    nodes = document.getElementsByClassName(className);
-    while (nodes.length > 0)
-    {
-        nodes[nodes.length - 1].parentNode.removeChild(
-            nodes[nodes.length - 1]
-        );
-    }
-}
+        node = document.getElementById(id);
+        node.parentNode.removeChild(node);
+    },
 
-function hideElementById(id)
-{
-    var node;
+    /**
+     * Remove HTML elements by the Class attribute
+     * @param {String} className The Class attribute of elements to be removed.
+     */
+    removeElementsByClass = function(className) {
+        var nodes = document.getElementsByClassName(className);
 
-    node = document.getElementById(id);
-    node.style.display = 'none';
-}
+        if (nodes === null || nodes.length <= 0) {
+            return;
+        }
 
-function unhideElementById(id)
-{
-    var node;
+        while (nodes.length > 0) {
+            nodes[nodes.length - 1].parentNode.removeChild(nodes[nodes.length - 1]);
+        }
+    },
 
-    node = document.getElementById(id);
-    node.style.display = 'block';
-}
+    /**
+     * Hide or unhide a HTML element by its ID attribute
+     * @param {String} id The ID attribute of an element to be removed.
+     * @param {Boolean} flag `true` to hide and `false` to unhide.
+     */
+    hideElementById = function(id, flag) {
+        var node = document.getElementById(id);
 
-function hideElementsByClassName(className, bool)
-{
-    var nodes;
+        if (node === null) {
+            return;
+        }
 
-    if (document.getElementsByClassName(className) == null)
-    {
-        console.warn(
-            'The specified element is not existed.' +
-            '1st argument has to be fixed.'
-        );
-        return;
-    }
-    if (bool == undefined)
-    {
-        bool = true;
-    }
-    nodes = document.getElementsByClassName(className);
-    for (var node in nodes)
-    {
-        if (bool == true)
-        {
+        if (flag === undefined) {
+            flag = true;
+        }
+
+        if (flag === true) {
             node.style.display = 'none';
         }
-        else
-        {
+        else {
             node.style.display = 'block';
         }
-    }
-}
+    },
 
-/**
- * Create and draw a set of HTML elements for each talk
- * @param {Object} listItem A set object of each talk content
- */
-function createItem(listItem, className)
-{
-    var defList = document.createElement('dl');
-    var defTerm = document.createElement('dt');
-    var defDesc = document.createElement('dd');
-    var itemAnchor = document.createElement('a');
-    var itemPortrait = document.createElement('img');
-    var itemDate = document.createElement('span');
-    var itemDateContent = document.createTextNode(getDateString(listItem.date));
-    var re_link =
-        new RegExp(/(s?https?:\/\/[-_.!~*'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)/g);
-    var re_twitter_hash = new RegExp(/#((?![a-z0-9]+;)[A-Za-z0-9_]+)/gi);
-    var re_twitter_id = new RegExp(/@([A-Za-z0-9_]{1,14}(?![a-z0-9_]))/g);
-    var itemContent = listItem.content.replace(
-        re_link,
-        '<a href="$1" target="_blank">$1</a>'
-    ).replace(
-        re_twitter_hash,
-        '<a href="http://twitter.com/search/%23$1" target="_blank">&#035;$1</a>'
-    ).replace(
-        re_twitter_id,
-        '<a href="http://twitter.com/$1" target="_blank">@$1</a>'
-    );
+    /**
+     * Hide or unhide HTML elements by the Class attribute
+     * @param {String} className The Class attribute of elements to be removed.
+     * @param {Boolean} flag `true` to hide and `false` to unhide.
+     */
+    hideElementsByClassName = function(className, flag) {
+        var nodes = document.getElementsByClassName(className);
 
-    defList.setAttribute('class', className);
-    itemAnchor.setAttribute('href', listItem.permalink_url);
-    itemAnchor.setAttribute('target', '_blank');
-    itemPortrait.setAttribute('src', listItem.author.photo_url);
-    itemPortrait.setAttribute('alt', listItem.author.name);
-    itemPortrait.setAttribute('width', '32');
-    itemPortrait.setAttribute('height', '32');
-    itemDate.setAttribute('class', 'date');
-    defList.appendChild(defTerm);
-    defList.appendChild(defDesc);
-    defTerm.appendChild(itemAnchor);
-    defTerm.appendChild(itemDate);
-    defDesc.innerHTML = itemContent;
-    itemAnchor.appendChild(itemPortrait);
-    itemDate.appendChild(itemDateContent);
-    document.getElementById('talks').appendChild(defList);
-
-    // Temporary
-    var defLists = document.getElementsByClassName(className);
-    var summary =document.createTextNode(
-        defLists.length + ' of ' + cache.total + ' items'
-    ); 
-    document.getElementById('summary').replaceChild(summary, summary);
-}
-
-/**
- * Process HTTP GET request and pass the result to callback function
- * @param {String} url A URL string for HTTP GET request.
- * @param {Function} callback A called function when HTTP request is finished.
- */
-function getHttpData(url, callback)
-{
-    var xhr = new XMLHttpRequest();
-
-    xhr.onreadystatechange = function()
-    {
-        if (xhr.readyState == 2)
-        {
-            request += 1;
-            console.log(request + ' times in total requested.');
+        if (nodes === null || nodes.length <= 0) {
+            return;
         }
-        if (xhr.readyState == 4 && xhr.status == 200)
-        {
-            callback(xhr);
+
+        if (flag === undefined) {
+            flag = true;
         }
-    }
-    xhr.open('GET', url, true);
-    xhr.send();
-}
 
-/**
- * Fetch Topsy Otter API trackbacks and generate page contents by the response.
- * @see http://otter.topsy.com/
- * @param {String} param_url A URL string for the API parameter.
- * @param {Number} param_page An optinal number of page parameter.
- */
-function getTrackbacks(param_url, param_page)
-{
-    const PERPAGE = 50;
-    var url = 'http://otter.topsy.com/trackbacks.json?';
- 
-    if (param_url.match(/^https?:\/\/.*/) == null)
-    {
-        hideElementById('loader');
-        document.getElementById('talks').innerHTML = 'Nothing to load.'
-        return;
-    }   
-    url += 'url=' + encodeURIComponent(param_url);
-    if (param_page) url += '&page=' + param_page.toString();
-    url += '&perpage=' + PERPAGE.toString() ;
-
-    getHttpData(
-        url,
-        function(xhr)
-        {
-            var response = JSON.parse(xhr.responseText).response;
-            var totalpage = Math.ceil(response.total / PERPAGE);
-
-            if (response.total == 0)
-            {
-                hideElementById('loader');
-                document.getElementById('talks').innerHTML = 'Nothing to load.'
-                return;
+        for (var node in nodes) {
+            if (flag === true) {
+                node.style.display = 'none';
             }
-            if (cache.topsy_trackback_url == '')
-            {
-                cache.topsy_trackback_url = response.topsy_trackback_url;
-                document.getElementById('topsy').setAttribute(
-                    'href',
-                    cache.topsy_trackback_url
-                );
+            else {
+                node.style.display = 'block';
             }
-            if (cache.total == 0)
-            {
-                cache.total = response.total;
-            }
-            for (var i = 0; i < response.list.length; i++)
-            {
-                cache.list.push(response.list[i]);
-                if (response.page == 1)
-                {
-                    createItem(response.list[i], 'talk');
-                }
-            }
-            console.log(
-                cache.list.length + ' of ' +
-                cache.total + ' items are stored.'
-            );
-            console.log(totalpage - response.page + ' pages left.');
-            if (response.page + 1 <= totalpage)
-            {
-                getTrackbacks(param_url, response.page + 1);
-            }
-        }
-    );
-    console.log('GET: ' + url);
-}
-
-
-function getQueryTrackbacks(param_url, param_contains, param_page)
-{
-    const PERPAGE = 50;
-    var url = 'http://otter.topsy.com/trackbacks.json?';
- 
-    if (param_url.match(/^https?:\/\/.*/) == null)
-    {
-        hideElementById('loader');
-        document.getElementById('talks').innerHTML = 'Nothing to load.'
-        return;
-    }   
-    url += 'url=' + encodeURIComponent(param_url);
-    if (param_contains) url +=
-        '&contains=' + encodeURIComponent(param_contains);
-    if (param_page) url += '&page=' + param_page.toString();
-    url += '&perpage=' + PERPAGE.toString() ;
-
-    getHttpData(
-        url,
-        function(xhr)
-        {
-            var response = JSON.parse(xhr.responseText).response;
-            var totalpage = Math.ceil(response.total / PERPAGE);
-
-            if (response.total == 0)
-            {
-                hideElementById('loader');
-                document.getElementById('talks').innerHTML = 'Nothing to load.'
-                return;
-            }
-            removeElementsByClassName('talk');
-            removeElementsByClassName('query');
-            for (var i = 0; i < response.list.length; i++)
-            {
-                createItem(response.list[i], 'query');
-            }
-            if (response.page + 1 <= totalpage)
-            {
-                getQueryTrackbacks(
-                    param_url,
-                    param_contains,
-                    response.page + 1
-                );
-            }
-        }
-    );
-    console.log('GET: ' + url);
-}
-
-/**
- * Start watching cache process asynchronously
- * @function
- */
-var timer = setInterval(
-    function()
-    {
-        var defLists = document.getElementsByClassName('talk');
-
-        if (cache.total != 0 &&
-            cache.total == cache.list.length /*&&
-            cache.total <= defLists.length*/)
-        {
-            hideElementById('loader');
-            clearInterval(timer);
         }
     },
-    1000 // 1 sec
-);
 
-
-document.getElementsByTagName('article')[0].addEventListener(
-    'scroll',
-    function()
-    {
-        var timer;
-
-        var element = document.getElementsByTagName('article')[0];
-        var scrollTop = element.scrollTop;
-        var scrollHeight = element.scrollHeight;
-        var offsetHeight = element.offsetHeight;
-        //var clientHeight = element.clientHeight;
-        var contentHeight = scrollHeight - offsetHeight;
-        var defLists = document.getElementsByClassName('talk');
-        var num = defLists.length;
-
-        if (contentHeight <= scrollTop)
-        {
-            timer = setTimeout(
-                function()
-                {
-                    for (var i = 0; i < 15; i++)
-                    {
-                        if (cache.list[num + i] != null)
-                        {
-                            createItem(cache.list[num + i], 'talk')
-                        }
-                    }
-                    clearTimeout(sleep);
-                },
-                500 // 0.5 sec
-            );
-        }
+    /**
+     * Create and draw a set of HTML elements for message
+     * @param {String} message A message to show
+     * @param {String} className The name of Class attribute to set
+     */
+    createMessage = function(message, className) {
+        hideElementById('loader');
+        document.getElementById('talks').innerHTML = '<p>' + message + '</p>'
     },
-    false
-);
 
-/**
- * Wrap events for HTML Form
- * @function
- */
-(
-    function()
-    {
-        var defaultValue = document.isearch.pattern.value;
+    /**
+     * Create and draw a set of HTML elements for each talk
+     * @param {Object} listItem A set object of each talk content
+     * @param {String} className The name of Class attribute to set
+     */
+    createItem = function(listItem, className) {
+        var defList = document.createElement('dl'),
+            defTerm = document.createElement('dt'),
+            itemPortrait = document.createElement('img'),
+            defDesc = document.createElement('dd'),
+            itemContent = listItem.content.replace(Sidetalk.RE_ANCHOR[0], Sidetalk.RE_ANCHOR[1]
+                ).replace(Sidetalk.RE_TWITTER_HASH[0], Sidetalk.RE_TWITTER_HASH[1]
+                ).replace(Sidetalk.RE_TWITTER_ID[0], Sidetalk.RE_TWITTER_ID[1]);
 
-        document.isearch.pattern.addEventListener(
-            'blur',
-            function()
-            {
-                if (this.value == '')
-                {
-                    this.value = defaultValue;
-                    this.style.color = '#aaa';
+        defList.setAttribute('class', className);
+
+        itemPortrait.setAttribute('src', listItem.author.photo_url);
+        itemPortrait.setAttribute('alt', listItem.author.name);
+        itemPortrait.setAttribute('width', '32');
+        itemPortrait.setAttribute('height', '32');
+
+        if (listItem.permalink_url) {
+            var itemAnchor = document.createElement('a');
+
+            itemAnchor.setAttribute('href', listItem.permalink_url);
+            itemAnchor.setAttribute('target', '_blank');
+            itemAnchor.appendChild(itemPortrait);
+            defTerm.appendChild(itemAnchor);
+        }
+        else {
+            defTerm.appendChild(itemPortrait);
+        }
+
+        if (listItem.date) {
+            var itemDate = document.createElement('span'),
+                date = Sidetalk.getDateString(listItem.date),
+                itemDateContent = document.createTextNode(date);
+
+            itemDate.setAttribute('class', 'date');
+            itemDate.appendChild(itemDateContent);
+            defTerm.appendChild(itemDate);
+        }
+
+        console.debug(itemContent);
+        defDesc.innerHTML = itemContent;
+        defList.appendChild(defTerm);
+        defList.appendChild(defDesc);
+        document.getElementById('talks').appendChild(defList);
+    },
+
+    /**
+     * Fetch Topsy Otter API trackbacks and generate page contents by the response.
+     * @see http://otter.topsy.com/
+     * @param {String} param_url A URL string for the API parameter.
+     * @param {Number} param_page An optinal number of page parameter.
+     */
+    getTrackbacks = function(params) {
+        if (Sidetalk.isValidURI(params.url) === false) {
+            createMessage('Invalid address.', 'message');
+            return;
+        }
+
+        params.perpage = Sidetalk.OTTER_PARAM_PERPAGE;
+        //params.nohidden = 0;
+
+        var encodedURI = Sidetalk.getEncodedURI(Sidetalk.OTTER_TRACKBACKS_URL, params);
+
+        Sidetalk.HTTP.get(encodedURI, function(xhr) {
+            var response = JSON.parse(xhr.responseText).response,
+                totalpage = Math.ceil(response.total /
+                                      Sidetalk.OTTER_PARAM_PERPAGE);
+
+            if (response.errors) {
+                createMessage('Server responds errors. Try again later',
+                              'message');
+
+                for (error in response.errors) {
+                    console.debug(error);
                 }
-            },
-            true
-        );
-        document.isearch.pattern.addEventListener(
-            'focus',
-            function()
-            {
-                if (this.value == defaultValue)
-                {
-                    this.value = '';
-                    this.style.color = '#000';
-                }
-            },
-            true
-        );
-        document.isearch.pattern.addEventListener(
-            'keyup',
-            function()
-            {
-                filterItems('talk', this.value);
-            },
-            true
-        );
-        document.isearch.addEventListener(
-            'submit',
-            function(event)
-            {
-                /*
-                if (this.pattern.value != '')
-                {
-                    window.location.href = '#page2';
-                    getQueryTrackbacks(cachedTab.url, this.pattern.value);
-                }*/
-                event.preventDefault();
-            },
-            false
-        );
-        console.log('Form event listeners added.');
-    }
-)();
 
-chrome.tabs.getSelected(
-    undefined,
-    function(tab)
-    {
-        console.log('Extension method started.');
-        cachedTab = tab;
-        getTrackbacks(tab.url);
-        console.log('Extension method finished.');
-    }
-);
+                return;
+            }
 
-console.log('Sequential processes all done.');
+            if (response.total === 0) {
+                createMessage('No one tweets here.', 'message');
+                return;
+            }
+
+            cache = response;
+
+            for (var i = 0; i < response.list.length; i++) {
+                createItem(response.list[i], 'talk');
+            }
+
+            if (cache.total <= Sidetalk.OTTER_PARAM_PERPAGE) {
+                hideElementById('loader');
+            }
+        }, function(xhr) {
+            createMessage('Server responds an error. Try again later.',
+                          'message');
+            console.debug('Error status code: ' + xhr.status, 'message');
+        });
+        console.debug('GET: ' + encodedURI);
+    };
+
+    /**
+     * Wrap events for HTML Form
+     */
+    var defaultValue = document.isearch.pattern.value;
+
+    document.isearch.pattern.addEventListener('blur', function() {
+        if (this.value === '') {
+            this.value = defaultValue;
+            this.style.color = '#aaa';
+        }
+    }, true);
+    document.isearch.pattern.addEventListener('focus', function() {
+        if (this.value === defaultValue) {
+            this.value = '';
+            this.style.color = '#000';
+        }
+    }, true);
+    document.isearch.pattern.addEventListener('keyup', function() {
+        filterItems('talk', this.value);
+    }, true);
+    document.isearch.addEventListener('submit', function(e) {
+        /*
+        if (this.pattern.value != '') {
+            window.location.href = '#page2';
+            getTrackbacks({
+                'url': cache.tab.url,
+                'contains': this.pattern.value
+            });
+        }
+        */
+        e.preventDefault();
+    }, false);
+    console.debug('Form event listeners added.');
+
+    var eventListener = {},
+
+    detectScrollEnd = function(tab) {
+        var article = document.getElementsByTagName('article')[0],
+            contentHeight = article.scrollHeight - article.offsetHeight,
+            defLists = document.getElementsByClassName('talk');
+
+        document.getElementById('summary').innerHTML =
+            contentHeight + ' : ' + article.scrollTop + ' || ' +
+            defLists.length + ' : ' + cache.total;
+
+        if (contentHeight <= article.scrollTop) {
+
+            if (cache.total <= defLists.length) {
+                Sidetalk.eventListeners.removeListener(eventListener);
+                hideElementById('loader');
+                return;
+            }
+
+            hideElementById('loader', false);
+
+            getTrackbacks({
+                'url': tab.url,
+                'page': cache.page + 1,
+                'offset': cache.last_offset,
+            });
+        }
+    };
+
+    /**
+     * Get the current tab and pass it to callback function
+     * @see http://code.google.com/chrome/extensions/tabs.html#method-getSelected
+     * @param {Number} windowId
+     * @param {Function} callback
+     */
+    chrome.tabs.getSelected(undefined, function(tab) {
+        /**
+         * Call the function to fetch tweets from Otter API
+         * @param {Tab} tab The current tab object.
+         */
+        getTrackbacks({'url': tab.url});
+
+        var article = document.getElementsByTagName('article')[0];
+
+        eventListener = Sidetalk.eventListeners.addListener(article,
+                                                   'scroll',
+                                                   function() {
+                                                       detectScrollEnd(tab);
+                                                    },
+                                                   false);
+        //console.debug('Listener ID: ' + scrollEvent);
+    });
+    console.debug('Sequential processes all done.');
+})();
